@@ -1,6 +1,7 @@
 ﻿import { FormEvent, useEffect, useRef, useState } from 'react';
 import { addTodo, deleteTodo, getTodos, USER_ID } from '../api/todos';
 import { Todo } from '../types/Todo';
+import { ErrorMessage } from '../types/ErrorMessage';
 
 type FilterStatus = 'all' | 'active' | 'completed';
 
@@ -8,7 +9,7 @@ export const useTodos = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage | ''>('');
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [newTitle, setNewTitle] = useState('');
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
@@ -23,7 +24,7 @@ export const useTodos = () => {
     setLoadingTodoIds(current => current.filter(todoId => todoId !== id));
   };
 
-  const showError = (message: string) => {
+  const showError = (message: ErrorMessage) => {
     setErrorMessage(message);
   };
 
@@ -33,7 +34,7 @@ export const useTodos = () => {
 
     deleteTodo(id)
       .then(() => setTodos(current => current.filter(todo => todo.id !== id)))
-      .catch(() => showError('Unable to delete a todo'))
+      .catch(() => showError(ErrorMessage.DELETE_TODO))
       .finally(() => {
         stopTodoLoading(id);
         setTimeout(() => {
@@ -68,7 +69,7 @@ export const useTodos = () => {
       }
 
       if (hasFailed) {
-        showError('Unable to delete a todo');
+        showError(ErrorMessage.DELETE_TODO);
       }
 
       setLoadingTodoIds(current =>
@@ -87,7 +88,7 @@ export const useTodos = () => {
     const trimmedTitle = newTitle.trim();
 
     if (!trimmedTitle) {
-      showError('Title should not be empty');
+      showError(ErrorMessage.EMPTY_TITLE);
 
       return;
     }
@@ -108,7 +109,7 @@ export const useTodos = () => {
         setTodos(current => [...current, createdTodo]);
         setNewTitle('');
       })
-      .catch(() => showError('Unable to add a todo'))
+      .catch(() => showError(ErrorMessage.ADD_TODO))
       .finally(() => {
         setTempTodo(null);
         setIsAdding(false);
@@ -160,7 +161,7 @@ export const useTodos = () => {
 
     getTodos()
       .then(setTodos)
-      .catch(() => setErrorMessage('Unable to load todos'))
+      .catch(() => setErrorMessage(ErrorMessage.LOAD_TODOS))
       .finally(() => setIsLoading(false));
   }, []);
 
